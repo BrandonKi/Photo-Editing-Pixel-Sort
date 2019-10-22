@@ -31,6 +31,7 @@ public class Main extends Application {
     static boolean scaleWithColor = false;
     static int amountOfPixelsMoved = 10;
     static int tolerance = 30;
+    static boolean first = true;
 
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
         try {
@@ -48,7 +49,7 @@ public class Main extends Application {
             tolerance = scan.nextInt();
 
             // load the image
-            BufferedImage imgBuf = ImageIO.read(new File(name + extension));
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + name + extension));
             w = imgBuf.getWidth();
             h = imgBuf.getHeight();
             copyImage(name);
@@ -153,7 +154,7 @@ public class Main extends Application {
     public static Image pixelSort(String imgName) {
         try {
             ArrayList<int[]> marked = new ArrayList<int[]>();
-            BufferedImage imgBuf = ImageIO.read(new File(imgName + extension));
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -195,7 +196,7 @@ public class Main extends Application {
 
     public static Image enhanceWhites(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(imgName + extension));
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -229,7 +230,7 @@ public class Main extends Application {
 
     public static Image RicherDarkColors(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(imgName + extension));
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -263,7 +264,7 @@ public class Main extends Application {
 
     public static Image brightenImage(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(imgName + extension));
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -279,6 +280,7 @@ public class Main extends Application {
                     c++;
                 }
             }
+            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
@@ -288,7 +290,7 @@ public class Main extends Application {
 
     public static Image darkenImage(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(imgName + extension));
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -304,6 +306,7 @@ public class Main extends Application {
                     c++;
                 }
             }
+            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
@@ -313,7 +316,13 @@ public class Main extends Application {
 
     public static BufferedImage copyImage(String oldFile) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(oldFile + extension));
+            BufferedImage imgBuf;
+            if(first){
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + oldFile + extension));
+                first = false;
+            }
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + oldFile + extension));
             BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
@@ -330,7 +339,7 @@ public class Main extends Application {
                     bufferedImage.setRGB(col, row, img[row][col]);
                 }
             }
-            ImageIO.write(bufferedImage, "jpg", new File("new-" + oldFile + extension));
+            ImageIO.write(bufferedImage, "jpg", new File(System.getProperty("user.dir") + "\\Edited-Photos\\" +"new-" + oldFile + extension));
             return bufferedImage;
         } catch (Exception e) {
             e.printStackTrace();
@@ -348,7 +357,7 @@ public class Main extends Application {
                     bufferedImage.setRGB(col, row, img[row][col]);
                 }
             }
-            ImageIO.write(bufferedImage, "jpg", new File("new-" + name + extension));
+            ImageIO.write(bufferedImage, "jpg", new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + "new-" + name + extension));
             return bufferedImage;
         } catch (Exception e) {
             e.printStackTrace();
