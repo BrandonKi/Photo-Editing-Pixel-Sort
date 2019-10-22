@@ -53,7 +53,7 @@ public class Main extends Application {
             w = imgBuf.getWidth();
             h = imgBuf.getHeight();
             copyImage(name);
-            Image image = new Image("new-" + name + extension);
+            Image image = new Image("\\Edited-Photos\\" + "new-" + name + extension);
             ImageView iv1 = new ImageView();
             iv1.setImage(image);
 
