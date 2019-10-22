@@ -4,7 +4,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.scene.image.WritableImage;
 import java.awt.image.BufferedImage;
@@ -106,8 +106,10 @@ public class Main extends Application {
             Group root = new Group();
             Scene scene = new Scene(root);
             // scene.setFill();
+            VBox vbox = new VBox();
             HBox box = new HBox();
-            box.getChildren().add(iv1);
+            vbox.getChildren().add(box);
+            vbox.getChildren().add(iv1);
             box.getChildren().add(brighten);
             box.getChildren().add(darken);
             box.getChildren().add(pixelSort);
@@ -115,7 +117,7 @@ public class Main extends Application {
             box.getChildren().add(richWhite);
             // box.getChildren().add(iv2);
             // box.getChildren().add(iv3);
-            root.getChildren().add(box);
+            root.getChildren().add(vbox);
 
             stage.setTitle("ImageView");
             stage.setWidth(415);
