@@ -157,8 +157,6 @@ public class Main extends Application {
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
-            System.out.println(imgName);
-            System.out.println(new Color(RGBarray[0]));
 
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
@@ -201,8 +199,6 @@ public class Main extends Application {
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
-            System.out.println(imgName);
-            System.out.println(new Color(RGBarray[0]));
 
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
@@ -224,7 +220,6 @@ public class Main extends Application {
                     c++;
                 }
             }
-            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
@@ -238,8 +233,6 @@ public class Main extends Application {
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
-            System.out.println(imgName);
-            System.out.println(new Color(RGBarray[0]));
 
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
@@ -261,7 +254,6 @@ public class Main extends Application {
                     c++;
                 }
             }
-            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
@@ -275,8 +267,6 @@ public class Main extends Application {
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
-            System.out.println(imgName);
-            System.out.println(new Color(RGBarray[0]));
 
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
@@ -289,7 +279,6 @@ public class Main extends Application {
                     c++;
                 }
             }
-            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
@@ -303,8 +292,6 @@ public class Main extends Application {
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
-            System.out.println(imgName);
-            System.out.println(new Color(RGBarray[0]));
 
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
@@ -317,7 +304,6 @@ public class Main extends Application {
                     c++;
                 }
             }
-            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
