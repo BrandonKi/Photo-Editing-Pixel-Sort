@@ -33,9 +33,14 @@ public class Main extends Application {
             String tempstr = scan.nextLine();
             name = tempstr.substring(0, tempstr.indexOf("."));
             extension = tempstr.substring(tempstr.indexOf("."));
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + name + extension));
-            w = imgBuf.getWidth();
-            h = imgBuf.getHeight();
+            try{
+                BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + name + extension));
+                w = imgBuf.getWidth();
+                h = imgBuf.getHeight();
+            }catch(Exception e){
+                System.out.println("Invalid file");
+                System.exit(1);
+            }
             copyImage(name);
             Image image = new Image("\\Photos\\"  + name + extension);
             ImageView iv1 = new ImageView();
@@ -386,7 +391,7 @@ public class Main extends Application {
                 first = false;
             }
             else
-                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + oldFile + extension));
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + oldFile + extension));
             BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
@@ -429,6 +434,7 @@ public class Main extends Application {
 
     public static void saveCurrentImage() {
         try {
+            System.out.println(new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
             ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
         } catch (Exception e) {
             e.printStackTrace();
