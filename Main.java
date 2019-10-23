@@ -24,6 +24,8 @@ public class Main extends Application {
     static int amountOfPixelsMoved = 10;
     static int tolerance = 30;
     static int minTolerance = 0;
+    static int lightTolerance = 200;
+    static int darkTolerance = 30;
     static boolean first = true;
 
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
@@ -275,7 +277,7 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if (temp.getRed() + temp.getGreen() + temp.getRed() > 500) {
+                    if (temp.getRed() > lightTolerance && temp.getGreen() > lightTolerance && temp.getRed() > lightTolerance) {
                         Color bright;
                         if (temp.getRed() > 245 && temp.getGreen() < 245 && temp.getBlue() < 245)
                             bright = new Color(255, 255, 255);
@@ -309,9 +311,9 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if (temp.getRed() + temp.getGreen() + temp.getRed() < 60) {
+                    if (temp.getRed() < darkTolerance && temp.getGreen() < darkTolerance && temp.getBlue() < darkTolerance) {
                         Color bright;
-                        if (temp.getRed() < 20 && temp.getGreen() < 20 && temp.getBlue() < 20)
+                        if (temp.getRed() < 10 && temp.getGreen() < 10 && temp.getBlue() < 10)
                             bright = new Color(0, 0, 0);
                         else
                             bright = new Color(
