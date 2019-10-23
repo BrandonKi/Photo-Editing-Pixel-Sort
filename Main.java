@@ -1,26 +1,18 @@
 import javafx.application.Application;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.geometry.*;
+import javafx.scene.*;
+import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.scene.image.WritableImage;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.awt.*;
+import java.io.*;
 import javax.imageio.ImageIO;
 import javafx.event.*;
 import javafx.scene.*;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import java.awt.Color;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.control.Button;
-import javafx.scene.input.MouseButton;
 import java.util.*;
+import javafx.scene.control.*;
 
 public class Main extends Application {
 
@@ -40,35 +32,18 @@ public class Main extends Application {
             String tempstr = scan.nextLine();
             name = tempstr.substring(0, tempstr.indexOf("."));
             extension = tempstr.substring(tempstr.indexOf("."));
-            System.out.println("Scale pixel sort with color?(y/n)");
-            if (scan.nextLine().equals("y"))
-                scaleWithColor = true;
-            System.out.println("How many pixels moved per sort?");
-            amountOfPixelsMoved = scan.nextInt();
-            System.out.println("What tolerance do you want?");
-            tolerance = scan.nextInt();
-
-            // load the image
             BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + name + extension));
             w = imgBuf.getWidth();
             h = imgBuf.getHeight();
             copyImage(name);
-            Image image = new Image("\\Edited-Photos\\" + "new-" + name + extension);
+            Image image = new Image("\\Photos\\"  + name + extension);
             ImageView iv1 = new ImageView();
             iv1.setImage(image);
-
-            // ImageView iv2 = new ImageView();
-            // iv2.setImage(image);
-            // iv2.setFitWidth(100);
-            // iv2.setPreserveRatio(true);
-            // iv2.setSmooth(true);
-            // iv2.setCache(true);
-
-            // ImageView iv3 = new ImageView();
-            // iv3.setImage(image);
-            // Rectangle2D viewportRect = new Rectangle2D(40, 35, 110, 110);
-            // iv3.setViewport(viewportRect);
-            // iv3.setRotate(90);
+            iv1.setFitWidth(1000);
+            iv1.setFitHeight(600);
+            iv1.setPreserveRatio(true);
+            iv1.setSmooth(true);
+            iv1.setCache(true);
 
             iv1.setOnMouseClicked(new EventHandler<MouseEvent>() {
                 @Override
@@ -78,6 +53,20 @@ public class Main extends Application {
                     }
                 }
             });
+
+            Label label1 = new Label("Scale with color(y/n)"); 
+            final ToggleGroup group = new ToggleGroup();
+            RadioButton rb1 = new RadioButton("Use Smart Scaling");
+            rb1.setUserData("true");
+            rb1.setToggleGroup(group);
+            rb1.setSelected(true);
+            RadioButton rb2 = new RadioButton("Disable smart scaling");
+            rb2.setUserData("");
+            rb2.setToggleGroup(group);
+            Label label2 = new Label("# of pixels moved"); 
+            TextField pixels = new TextField();
+            Label label3 = new Label("Tolerance"); 
+            TextField tol = new TextField();
 
             Button brighten = new Button("Bright");
             brighten.setOnAction((event) -> {
@@ -104,21 +93,77 @@ public class Main extends Application {
                 iv1.setImage(enhanceWhites("new-" + name));
             });
 
+            Button set = new Button("Enter");
+            set.setOnAction((event) -> {
+                if(group.getSelectedToggle().getUserData().toString().equals("true"))
+                    scaleWithColor = true;
+                else{
+                    scaleWithColor = false;   
+                }
+                try{ 
+                    amountOfPixelsMoved = Integer.parseInt(pixels.getText());
+                }catch(Exception e){
+                    amountOfPixelsMoved = 0;
+                    pixels.setText("Invalid value");
+                }
+                try{ 
+                    tolerance = Integer.parseInt(tol.getText());               
+                }catch(Exception e){
+                    tolerance = 0;
+                    tol.setText("Invalid value");
+                }
+                
+            });
+
+            Button resetImage = new Button("Reset Image");
+            resetImage.setOnAction((event) -> {
+                iv1.setImage(new Image("\\Photos\\" + name + extension));
+                first = true;
+                copyImage(name);
+            });
+
+            Button saveImage = new Button("Save Image");
+            saveImage.setOnAction((event) -> {
+                saveCurrentImage();
+
+            });
+            
+            
+
+            VBox options = new VBox(5);
+            
+            options.getChildren().add(rb1);
+            options.getChildren().add(rb2);            
+            options.getChildren().add(label1);
+            options.getChildren().add(label2);
+            options.getChildren().add(pixels);
+            options.getChildren().add(label3);
+            options.getChildren().add(tol);
+            options.getChildren().add(set);
+            options.getChildren().add(resetImage);
+            options.getChildren().add(saveImage);
+
+            HBox buttons = new HBox(3);
+            buttons.getChildren().add(brighten);
+            buttons.getChildren().add(darken);
+            buttons.getChildren().add(pixelSort);
+            buttons.getChildren().add(richDark);
+            buttons.getChildren().add(richWhite);
+
+            VBox vbox = new VBox(10);
+            vbox.getChildren().add(buttons);
+            vbox.getChildren().add(iv1);
+
+            HBox full = new HBox(20);
+            full.setPadding(new Insets(10, 50, 50, 50));
+            full.getChildren().add(vbox);
+            full.getChildren().add(options);
+
             Group root = new Group();
+            root.getChildren().add(full);
+
             Scene scene = new Scene(root);
             // scene.setFill();
-            VBox vbox = new VBox();
-            HBox box = new HBox();
-            vbox.getChildren().add(box);
-            vbox.getChildren().add(iv1);
-            box.getChildren().add(brighten);
-            box.getChildren().add(darken);
-            box.getChildren().add(pixelSort);
-            box.getChildren().add(richDark);
-            box.getChildren().add(richWhite);
-            // box.getChildren().add(iv2);
-            // box.getChildren().add(iv3);
-            root.getChildren().add(vbox);
 
             stage.setTitle("ImageView");
             stage.setWidth(415);
@@ -280,7 +325,6 @@ public class Main extends Application {
                     c++;
                 }
             }
-            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
@@ -306,7 +350,6 @@ public class Main extends Application {
                     c++;
                 }
             }
-            System.out.println(new Color(img[0][0]));
             return convertToFxImage(convertAndSaveImage(img));
         } catch (Exception e) {
             e.printStackTrace();
@@ -335,11 +378,10 @@ public class Main extends Application {
             }
             for (int row = 0; row < h; row++) {
                 for (int col = 0; col < w; col++) {
-
                     bufferedImage.setRGB(col, row, img[row][col]);
                 }
             }
-            ImageIO.write(bufferedImage, "jpg", new File(System.getProperty("user.dir") + "\\Edited-Photos\\" +"new-" + oldFile + extension));
+            ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + oldFile + extension));
             return bufferedImage;
         } catch (Exception e) {
             e.printStackTrace();
@@ -353,15 +395,22 @@ public class Main extends Application {
 
             for (int row = 0; row < h; row++) {
                 for (int col = 0; col < w; col++) {
-
                     bufferedImage.setRGB(col, row, img[row][col]);
                 }
             }
-            ImageIO.write(bufferedImage, "jpg", new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + "new-" + name + extension));
+            ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + name + extension));
             return bufferedImage;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void saveCurrentImage() {
+        try {
+            ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
