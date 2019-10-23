@@ -277,7 +277,7 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if (temp.getRed() > lightTolerance && temp.getGreen() > lightTolerance && temp.getRed() > lightTolerance) {
+                    if (temp.getRed() < lightTolerance && temp.getGreen() < lightTolerance && temp.getRed() < lightTolerance) {
                         Color bright;
                         if (temp.getRed() > 245 && temp.getGreen() < 245 && temp.getBlue() < 245)
                             bright = new Color(255, 255, 255);
