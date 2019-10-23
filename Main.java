@@ -26,6 +26,7 @@ public class Main extends Application {
     static int minTolerance = 0;
     static int lightTolerance = 200;
     static int darkTolerance = 30;
+    static int contrastTolerance = 5;
     static boolean first = true;
 
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
@@ -103,6 +104,11 @@ public class Main extends Application {
                 iv1.setImage(enhanceWhites("new-" + name));
             });
 
+            Button contrast = new Button("Increase Contrast");
+            contrast.setOnAction((event) -> {
+                iv1.setImage(increaseContrast("new-" + name));
+            });
+
             Button set = new Button("Enter");
             set.setOnAction((event) -> {
                 if(group.getSelectedToggle().getUserData().toString().equals("true"))
@@ -177,6 +183,7 @@ public class Main extends Application {
             buttons.getChildren().add(pixelSort);
             buttons.getChildren().add(richDark);
             buttons.getChildren().add(richWhite);
+            buttons.getChildren().add(contrast);
 
             VBox vbox = new VBox(10);
             vbox.getChildren().add(buttons);
@@ -277,7 +284,7 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if (temp.getRed() < lightTolerance && temp.getGreen() < lightTolerance && temp.getRed() < lightTolerance) {
+                    if (temp.getRed() > lightTolerance && temp.getGreen() > lightTolerance && temp.getRed() > lightTolerance) {
                         Color bright;
                         if (temp.getRed() > 245 && temp.getGreen() < 245 && temp.getBlue() < 245)
                             bright = new Color(255, 255, 255);
@@ -350,6 +357,53 @@ public class Main extends Application {
                             (int) temp.getGreen() + 10 <= 255 ? (int) temp.getGreen() + 10 : (int) temp.getGreen(),
                             (int) temp.getBlue() + 10 <= 255 ? (int) temp.getBlue() + 10 : (int) temp.getBlue());
                     img[i][x] = bright.getRGB();
+                    c++;
+                }
+            }
+            return convertToFxImage(convertAndSaveImage(img));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Image increaseContrast(String imgName) {
+        try {
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
+            int[][] img = new int[h][w];
+            int c = 0;
+
+            for (int i = 0; i < h; i++) {
+                for (int x = 0; x < w; x++) {
+                    Color temp = new Color(RGBarray[c]);
+                    Color newColor;
+                    if(
+                        temp.getRed() <= 255 - contrastTolerance && 
+                        temp.getGreen() <= 255 - contrastTolerance && 
+                        temp.getBlue() <= 255 - contrastTolerance &&
+                        temp.getRed() >= 255/2 - contrastTolerance && 
+                        temp.getGreen() >= 255/2 - contrastTolerance && 
+                        temp.getBlue() >= 255/2 - contrastTolerance)
+                            newColor = new Color(
+                                (int) temp.getRed() + contrastTolerance, 
+                                (int) temp.getGreen() + contrastTolerance, 
+                                (int) temp.getBlue() + contrastTolerance);
+                    else if (
+                        temp.getRed() >= 0 + contrastTolerance && 
+                        temp.getGreen() >= 0 + contrastTolerance && 
+                        temp.getBlue() >= 0 + contrastTolerance)
+                            newColor = new Color(
+                                (int) temp.getRed() - contrastTolerance, 
+                                (int) temp.getGreen() - contrastTolerance, 
+                                (int) temp.getBlue() - contrastTolerance);
+                    else{
+                        newColor = new Color(
+                            (int) temp.getRed(), 
+                            (int) temp.getGreen(), 
+                            (int) temp.getBlue());
+                    }
+                    img[i][x] = newColor.getRGB();
                     c++;
                 }
             }
@@ -436,7 +490,7 @@ public class Main extends Application {
 
     public static void saveCurrentImage() {
         try {
-            System.out.println(new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
+            System.out.println("Saved in\n" + new File(System.getProperty("user.dir") + "\\Saved-Photos" + "\nas\n"+ name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
             ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
         } catch (Exception e) {
             e.printStackTrace();
