@@ -311,7 +311,7 @@ public class Main extends Application {
                     Color temp = new Color(RGBarray[c]);
                     if (temp.getRed() + temp.getGreen() + temp.getRed() < 60) {
                         Color bright;
-                        if (temp.getRed() < 10 && temp.getGreen() < 10 && temp.getBlue() < 10)
+                        if (temp.getRed() < 20 && temp.getGreen() < 20 && temp.getBlue() < 20)
                             bright = new Color(0, 0, 0);
                         else
                             bright = new Color(
