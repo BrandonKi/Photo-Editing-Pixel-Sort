@@ -147,7 +147,7 @@ public class Main extends Application {
             options.getChildren().add(label2);
             options.getChildren().add(pixels);
 
-            VBox tolBox = new VBox(10);
+            VBox tolBox = new VBox(15);
             HBox minTolBox = new HBox(10);
             minTolBox.getChildren().add(label3);
             minTolBox.getChildren().add(minTol);
