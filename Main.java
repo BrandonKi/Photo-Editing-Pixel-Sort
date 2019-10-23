@@ -23,6 +23,7 @@ public class Main extends Application {
     static boolean scaleWithColor = false;
     static int amountOfPixelsMoved = 10;
     static int tolerance = 30;
+    static int minTolerance = 0;
     static boolean first = true;
 
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
@@ -65,7 +66,9 @@ public class Main extends Application {
             rb2.setToggleGroup(group);
             Label label2 = new Label("# of pixels moved"); 
             TextField pixels = new TextField();
-            Label label3 = new Label("Tolerance"); 
+            Label label3 = new Label("Min Tolerance");
+            TextField minTol = new TextField(); 
+            Label label4 = new Label("Tolerance");
             TextField tol = new TextField();
 
             Button brighten = new Button("Bright");
@@ -107,6 +110,12 @@ public class Main extends Application {
                     pixels.setText("Invalid value");
                 }
                 try{ 
+                    minTolerance = Integer.parseInt(minTol.getText());               
+                }catch(Exception e){
+                    minTolerance = 0;
+                    minTol.setText("Invalid value");
+                }
+                try{ 
                     tolerance = Integer.parseInt(tol.getText());               
                 }catch(Exception e){
                     tolerance = 0;
@@ -137,8 +146,20 @@ public class Main extends Application {
             options.getChildren().add(label1);
             options.getChildren().add(label2);
             options.getChildren().add(pixels);
-            options.getChildren().add(label3);
-            options.getChildren().add(tol);
+
+            VBox tolBox = new VBox(10);
+            HBox minTolBox = new HBox(10);
+            minTolBox.getChildren().add(label3);
+            minTolBox.getChildren().add(minTol);
+
+            HBox tolBoxGroup = new HBox(10);
+            tolBoxGroup.getChildren().add(label4);
+            tolBoxGroup.getChildren().add(tol);
+
+            tolBox.getChildren().add(minTolBox);
+            tolBox.getChildren().add(tolBoxGroup);
+
+            options.getChildren().add(tolBox);
             options.getChildren().add(set);
             options.getChildren().add(resetImage);
             options.getChildren().add(saveImage);
@@ -207,7 +228,7 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if ((int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance)
+                    if ((int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance && (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance)
                         marked.add(new int[] { i, x });
                     Color bright = new Color((int) temp.getRed(), (int) temp.getGreen(), (int) temp.getBlue());
                     img[i][x] = bright.getRGB();
