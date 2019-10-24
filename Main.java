@@ -26,7 +26,7 @@ public class Main extends Application {
     static int minTolerance = 0;
     static int lightTolerance = 200;
     static int darkTolerance = 30;
-    static int contrastTolerance = 5;
+    static int contrastTolerance = 2;
     static boolean first = true;
 
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
@@ -109,6 +109,16 @@ public class Main extends Application {
                 iv1.setImage(increaseContrast("new-" + name));
             });
 
+            Button mystifyButton = new Button("Blue/Green");
+            mystifyButton.setOnAction((event) -> {
+                iv1.setImage(mystify("new-" + name));
+            });
+
+            Button pastelButton = new Button("Pastel color");
+            pastelButton.setOnAction((event) -> {
+                iv1.setImage(pastel("new-" + name));
+            });
+
             Button set = new Button("Enter");
             set.setOnAction((event) -> {
                 if(group.getSelectedToggle().getUserData().toString().equals("true"))
@@ -184,6 +194,8 @@ public class Main extends Application {
             buttons.getChildren().add(richDark);
             buttons.getChildren().add(richWhite);
             buttons.getChildren().add(contrast);
+            buttons.getChildren().add(mystifyButton);
+            buttons.getChildren().add(pastelButton);
 
             VBox vbox = new VBox(10);
             vbox.getChildren().add(buttons);
@@ -428,6 +440,56 @@ public class Main extends Application {
                             (int) temp.getRed() - 10 >= 1 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
                             (int) temp.getGreen() - 10 >= 1 ? (int) temp.getGreen() - 10 : (int) temp.getGreen(),
                             (int) temp.getBlue() - 10 >= 1 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
+                    img[i][x] = bright.getRGB();
+                    c++;
+                }
+            }
+            return convertToFxImage(convertAndSaveImage(img));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Image mystify(String imgName) {
+        try {
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
+            int[][] img = new int[h][w];
+            int c = 0;
+
+            for (int i = 0; i < h; i++) {
+                for (int x = 0; x < w; x++) {
+                    Color temp = new Color(RGBarray[c]);
+                    Color bright = new Color(
+                            (int) temp.getRed() - 10 >= 1 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
+                            (int) temp.getGreen() + 5 <= 255 ? (int) temp.getGreen() + 5 : (int) temp.getGreen(),
+                            (int) temp.getBlue() + 5 <= 255 ? (int) temp.getBlue() + 5 : (int) temp.getBlue());
+                    img[i][x] = bright.getRGB();
+                    c++;
+                }
+            }
+            return convertToFxImage(convertAndSaveImage(img));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Image pastel(String imgName) {
+        try {
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
+            int[][] img = new int[h][w];
+            int c = 0;
+
+            for (int i = 0; i < h; i++) {
+                for (int x = 0; x < w; x++) {
+                    Color temp = new Color(RGBarray[c]);
+                    Color bright = new Color(
+                            (int) temp.getRed() -5 >= 0 ? (int) temp.getRed() -5 : (int) temp.getRed(),
+                            (int) temp.getGreen() - 10 >= 0 ? (int) temp.getGreen() - 10 : (int) temp.getGreen(),
+                            (int) temp.getBlue() - 10 >= 0 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
                     img[i][x] = bright.getRGB();
                     c++;
                 }
