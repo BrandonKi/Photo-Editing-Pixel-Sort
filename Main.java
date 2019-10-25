@@ -109,6 +109,11 @@ public class Main extends Application {
                 iv1.setImage(increaseContrast("new-" + name));
             });
 
+            Button decContrast = new Button("Decrease Contrast");
+            decContrast.setOnAction((event) -> {
+                iv1.setImage(decreaseContrast("new-" + name));
+            });
+
             Button mystifyButton = new Button("Blue/Green");
             mystifyButton.setOnAction((event) -> {
                 iv1.setImage(mystify("new-" + name));
@@ -194,6 +199,7 @@ public class Main extends Application {
             buttons.getChildren().add(richDark);
             buttons.getChildren().add(richWhite);
             buttons.getChildren().add(contrast);
+            buttons.getChildren().add(decContrast);
             buttons.getChildren().add(mystifyButton);
             buttons.getChildren().add(pastelButton);
 
@@ -426,6 +432,56 @@ public class Main extends Application {
         return null;
     }
 
+    public static Image decreaseContrast(String imgName) {
+        try {
+            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
+            int[][] img = new int[h][w];
+            int c = 0;
+
+            for (int i = 0; i < h; i++) {
+                for (int x = 0; x < w; x++) {
+                    Color temp = new Color(RGBarray[c]);
+                    Color newColor;
+                    if(
+                        temp.getRed() <= 255 && 
+                        temp.getGreen() <= 255 && 
+                        temp.getBlue() <= 255 &&
+                        temp.getRed() >= 255/2 && 
+                        temp.getGreen() >= 255/2 && 
+                        temp.getBlue() >= 255/2)
+                            newColor = new Color(
+                                (int) temp.getRed() - contrastTolerance, 
+                                (int) temp.getGreen() - contrastTolerance, 
+                                (int) temp.getBlue() - contrastTolerance);
+                    else if (
+                        temp.getRed() >= 0 && 
+                        temp.getGreen() >= 0 && 
+                        temp.getBlue() >= 0 &&
+                        temp.getRed() <= 255 - contrastTolerance &&
+                        temp.getGreen() <= 255 - contrastTolerance &&
+                        temp.getBlue() <= 255 - contrastTolerance)
+                            newColor = new Color(
+                                (int) temp.getRed() + contrastTolerance, 
+                                (int) temp.getGreen() + contrastTolerance, 
+                                (int) temp.getBlue() + contrastTolerance);
+                    else{
+                        newColor = new Color(
+                            (int) temp.getRed(), 
+                            (int) temp.getGreen(), 
+                            (int) temp.getBlue());
+                    }
+                    img[i][x] = newColor.getRGB();
+                    c++;
+                }
+            }
+            return convertToFxImage(convertAndSaveImage(img));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static Image darkenImage(String imgName) {
         try {
             BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
@@ -461,10 +517,20 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    Color bright = new Color(
-                            (int) temp.getRed() - 10 >= 1 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
-                            (int) temp.getGreen() + 5 <= 255 ? (int) temp.getGreen() + 5 : (int) temp.getGreen(),
-                            (int) temp.getBlue() + 5 <= 255 ? (int) temp.getBlue() + 5 : (int) temp.getBlue());
+                    Color bright;
+                    if(
+                        temp.getRed() - 5 >= 0 && 
+                        temp.getGreen() + 5 <= 255 && 
+                        temp.getBlue() + 5 <= 255)
+                            bright = new Color(
+                                (int) temp.getRed() - 5,
+                                (int) temp.getGreen() + 5,
+                                (int) temp.getBlue() + 5);
+                    else
+                        bright = new Color(
+                            (int) temp.getRed() ,
+                            (int) temp.getGreen(),
+                            (int) temp.getBlue());
                     img[i][x] = bright.getRGB();
                     c++;
                 }
@@ -486,10 +552,45 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    Color bright = new Color(
-                            (int) temp.getRed() -5 >= 0 ? (int) temp.getRed() -5 : (int) temp.getRed(),
-                            (int) temp.getGreen() - 10 >= 0 ? (int) temp.getGreen() - 10 : (int) temp.getGreen(),
-                            (int) temp.getBlue() - 10 >= 0 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
+                    Color bright;
+                    if(
+                        temp.getRed() + 10 <= 255 && 
+                        temp.getGreen() - 5 >= 0 && 
+                        temp.getBlue() - 10 >= 0)
+                            bright = new Color(
+                                (int) temp.getRed() + 10,
+                                (int) temp.getGreen() - 5,
+                                (int) temp.getBlue() - 10);
+                    else
+                        bright = new Color(
+                            (int) temp.getRed() ,
+                            (int) temp.getGreen(),
+                            (int) temp.getBlue());
+                    if(
+                        temp.getRed() >= 255/2 && 
+                        temp.getGreen() >= 255/2 && 
+                        temp.getBlue() >= 255/2)
+                        bright = new Color(
+                            (int) temp.getRed() - contrastTolerance, 
+                            (int) temp.getGreen() - contrastTolerance, 
+                            (int) temp.getBlue() - contrastTolerance);
+                    else if (
+                        temp.getRed() >= 0 + contrastTolerance && 
+                        temp.getGreen() >= 0 + contrastTolerance && 
+                        temp.getBlue() >= 0 + contrastTolerance &&
+                        temp.getRed() <= 255/2 && 
+                        temp.getGreen() <= 255/2 && 
+                        temp.getBlue() <= 255/2)
+                            bright = new Color(
+                                (int) temp.getRed() + contrastTolerance, 
+                                (int) temp.getGreen() + contrastTolerance, 
+                                (int) temp.getBlue() + contrastTolerance);
+                    else{
+                        bright = new Color(
+                            (int) temp.getRed(), 
+                            (int) temp.getGreen(), 
+                            (int) temp.getBlue());
+                    }
                     img[i][x] = bright.getRGB();
                     c++;
                 }
