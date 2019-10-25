@@ -329,10 +329,10 @@ public class Main extends Application {
             for (int i = 0; i < currentH; i++) {
                 for (int x = 0; x < currentW; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if(
-                        selected && 
-                        i >= x1 && i <= x2 && 
-                        x >= y1 && x <= y2)
+                    // if(
+                    //     selected && 
+                    //     i >= x1 && i <= x2 && 
+                    //     x >= y1 && x <= y2)
                     if (
                         (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance && 
                         (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance)
