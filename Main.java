@@ -30,7 +30,7 @@ public class Main extends Application {
     static boolean first = true;
 
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
-        try {
+    	try {
             Scanner scan = new Scanner(System.in);
             System.out.println("What is the file name?(with extension)");
             String tempstr = scan.nextLine();
