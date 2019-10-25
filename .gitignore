@@ -13,7 +13,7 @@
 #Stuff
 Photos/*
 Saved-Photos/*
-EditedPhotos/*
+Edited-Photos/*
 
 # Package Files #
 *.war
