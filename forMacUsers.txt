@@ -1,0 +1,4 @@
+Go to terminal 
+navigate to this directory 
+then type in
+java -jar Application.jar
