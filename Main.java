@@ -28,6 +28,9 @@ public class Main extends Application {
     static int selectingCount = 0;
     static TextField selection1, selection2;
     static int x1, x2, y1, y2;
+    static double aspectRatio;
+    static double realWidth;
+    static double realHeight;
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
         try {
             Scanner scan = new Scanner(System.in);
@@ -70,6 +73,10 @@ public class Main extends Application {
             iv1.setPreserveRatio(true);
             iv1.setSmooth(true);
             iv1.setCache(true);
+
+            aspectRatio = image.getWidth() / image.getHeight();
+            realWidth = Math.min(iv1.getFitWidth(), iv1.getFitHeight() * aspectRatio);
+            realHeight = Math.min(iv1.getFitHeight(), iv1.getFitWidth() / aspectRatio);
 
             Label label1 = new Label("Scale with color(y/n)");
             ToggleGroup group = new ToggleGroup();
@@ -286,9 +293,13 @@ public class Main extends Application {
 
     private static void setSelectionHelper() {
         x1 = Integer.parseInt(selection1.getText().substring(0, selection1.getText().indexOf(" ")));
-        y1 = Integer.parseInt(selection1.getText().substring(selection1.getText().indexOf(" ") + 2))+10;
+        y1 = Integer.parseInt(selection1.getText().substring(selection1.getText().indexOf(" ") + 2));
         x2 = Integer.parseInt(selection2.getText().substring(0, selection2.getText().indexOf(" ")));
-        y2 = Integer.parseInt(selection2.getText().substring(selection2.getText().indexOf(" ") + 2))+10;
+        y2 = Integer.parseInt(selection2.getText().substring(selection2.getText().indexOf(" ") + 2));
+
+        System.out.println(w + " " + h);
+        System.out.println(realWidth + " " + realHeight);
+        
         int temp;
         if(x1 > x2 && y1 > y2){
             temp = x1;
@@ -670,10 +681,10 @@ public class Main extends Application {
                         temp.getRed() >= 255 / 2 &&
                         temp.getGreen() >= 255 / 2 &&
                         temp.getBlue() >= 255 / 2)
-                        newColor = new Color(
-                            (int) temp.getRed() - contrastTolerance,
-                            (int) temp.getGreen() - contrastTolerance,
-                            (int) temp.getBlue() - contrastTolerance);
+                            newColor = new Color(
+                                (int) temp.getRed() - contrastTolerance,
+                                (int) temp.getGreen() - contrastTolerance,
+                                (int) temp.getBlue() - contrastTolerance);
                     else if (
                         temp.getRed() >= 0 &&
                         temp.getGreen() >= 0 &&
@@ -681,10 +692,10 @@ public class Main extends Application {
                         temp.getRed() <= 255 - contrastTolerance &&
                         temp.getGreen() <= 255 - contrastTolerance &&
                         temp.getBlue() <= 255 - contrastTolerance)
-                        newColor = new Color(
-                            (int) temp.getRed() + contrastTolerance,
-                            (int) temp.getGreen() + contrastTolerance,
-                            (int) temp.getBlue() + contrastTolerance);
+                            newColor = new Color(
+                                (int) temp.getRed() + contrastTolerance,
+                                (int) temp.getGreen() + contrastTolerance,
+                                (int) temp.getBlue() + contrastTolerance);
                     else {
                         newColor = new Color(
                             (int) temp.getRed(),
@@ -896,10 +907,10 @@ public class Main extends Application {
         try {
             if (System.getProperty("os.name").indexOf("Mac") != -1) {
                 System.out.println("Saved in\n" + new File(System.getProperty("user.dir") + "/Saved-Photos" + "\nas\n" + name + "(" + Long.toString(System.currentTimeMillis() / 10000) + ")" + extension));
-                ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "/Saved-Photos/" + name + "(" + Long.toString(System.currentTimeMillis() / 10000) + ")" + extension));
+                ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "/Saved-Photos/" + name + "(" + Long.toString(System.currentTimeMillis() / 10000000) + ")" + extension));
             } else {
                 System.out.println("Saved in\n" + new File(System.getProperty("user.dir") + "\\Saved-Photos" + "\nas\n" + name + "(" + Long.toString(System.currentTimeMillis() / 10000) + ")" + extension));
-                ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis() / 10000) + ")" + extension));
+                ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis() / 10000000) + ")" + extension));
             }
         } catch (Exception e) {
             e.printStackTrace();
