@@ -206,6 +206,11 @@ public class Main extends Application {
                 resetSelection();
             });
 
+            Button randomColors = new Button("Random Colors");
+            randomColors.setOnAction((event) -> {
+                iv1.setImage(randomColors("new-" + name));
+            });
+
 
             VBox options = new VBox(5);
 
@@ -244,6 +249,7 @@ public class Main extends Application {
             buttons.getChildren().add(decContrast);
             buttons.getChildren().add(mystifyButton);
             buttons.getChildren().add(pastelButton);
+            buttons.getChildren().add(randomColors);
 
             VBox vbox = new VBox(10);
             vbox.getChildren().add(buttons);
@@ -276,18 +282,14 @@ public class Main extends Application {
 
     }
 
-    public static void setSelection() {
-        selecting = true;
-        selectingCount = 0;
-    }
+   
 
     private static void setSelectionHelper() {
         x1 = Integer.parseInt(selection1.getText().substring(0, selection1.getText().indexOf(" ")));
-        y1 = Integer.parseInt(selection1.getText().substring(selection1.getText().indexOf(" ") + 2));
+        y1 = Integer.parseInt(selection1.getText().substring(selection1.getText().indexOf(" ") + 2))+10;
         x2 = Integer.parseInt(selection2.getText().substring(0, selection2.getText().indexOf(" ")));
-        y2 = Integer.parseInt(selection2.getText().substring(selection2.getText().indexOf(" ") + 2));
+        y2 = Integer.parseInt(selection2.getText().substring(selection2.getText().indexOf(" ") + 2))+10;
         int temp;
-        System.out.println(x1 + ", " + y1 + "  " + x2 + ", " + y2);
         if(x1 > x2 && y1 > y2){
             temp = x1;
             x1 = x2;
@@ -296,7 +298,6 @@ public class Main extends Application {
             y1 = y2;
             y2 = temp;
         }
-        System.out.println(x1 + ", " + y1 + "  " + x2 + ", " + y2);
         selectedW = x2 - x1;
         selectedH = y2 - y1;
         selected = true;
@@ -345,7 +346,6 @@ public class Main extends Application {
                         (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance && 
                         (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance){
                             marked.add(new int[] {i,x});
-                            // temp = new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
                             System.out.println(i + " " + x);
                         }
                     else if (
@@ -380,6 +380,96 @@ public class Main extends Application {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static Image randomColors(String imgName){
+        try {
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
+            int[][] img = new int[h][w];
+            int c = 0;
+
+            for (int i = 0; i < h; i++) {
+                for (int x = 0; x < w; x++) {
+                    Color temp = new Color(RGBarray[c]);
+                    Color bright;
+                    if(selected && 
+                        x >= x1 && x <= x2 && 
+                        i >= y1 && i <= y2){
+                        int temp1 = (int)(Math.random()*temp.getRed());
+                        int temp2 = (int)(Math.random()*temp.getGreen());
+                        int temp3 = (int)(Math.random()*temp.getBlue());
+                        int desc = (int)Math.round(Math.random());
+                        int brightness = temp.getRed() + temp.getGreen() + temp.getBlue();
+                            int newRed = (int)(Math.random() * 255);
+                            int newGreen = (int)(Math.random() * 255);
+                            int newBlue = (int)(Math.random() * 255);
+                            for(int t = 0; newRed + newGreen + newBlue > brightness && newRed < 255 && newGreen < 255 && newBlue < 255;t++){
+                                if(newGreen > 255 || newBlue > 255 || newRed > 255){
+                                    newGreen--;
+                                    newBlue--;
+                                    newRed--;
+                                }
+
+                                if(t % 3 == 0 && newRed > 0)
+                                    newRed--;
+                                else if(t % 2 == 0 && newGreen > 0)
+                                    newGreen--;
+                                else if(newBlue > 0)
+                                    newBlue--;
+                            }
+                            bright = new Color(
+                                newRed,
+                                newGreen,
+                                newBlue);
+                        }
+                        else if(!selected){
+                            int brightness = temp.getRed() + temp.getGreen() + temp.getBlue();
+                            int newRed = (int)(Math.random() * 255);
+                            int newGreen = (int)(Math.random() * 255);
+                            int newBlue = (int)(Math.random() * 255);
+                            for(int t = 0; newRed + newGreen + newBlue > brightness && newRed < 255 && newGreen < 255 && newBlue < 255;t++){
+                                if(newGreen > 255 || newBlue > 255 || newRed > 255){
+                                    newGreen--;
+                                    newBlue--;
+                                    newRed--;
+                                }
+
+                                if(t % 3 == 0 && newRed > 0)
+                                    newRed--;
+                                else if(t % 2 == 0 && newGreen > 0)
+                                    newGreen--;
+                                else if(newBlue > 0)
+                                    newBlue--;
+                            }
+                            bright = new Color(
+                                newRed,
+                                newGreen,
+                                newBlue);
+                        }
+                       
+                        else{
+                            bright = temp;
+                        }
+                        img[i][x] = bright.getRGB();
+                    c++;
+                }
+            }
+            System.out.println("done");
+            return convertToFxImage(convertAndSaveImage(img));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void setSelection() {
+        selecting = true;
+        selectingCount = 0;
     }
 
     public static Image enhanceWhites(String imgName) {
@@ -495,10 +585,7 @@ public class Main extends Application {
                                 (int) temp.getGreen() + 10 <= 255 ? (int) temp.getGreen() + 10 : (int) temp.getGreen(),
                                 (int) temp.getBlue() + 10 <= 255 ? (int) temp.getBlue() + 10 : (int) temp.getBlue());
                         else
-                            bright = new Color(
-                                (int) temp.getRed(),
-                                (int) temp.getBlue(),
-                                (int) temp.getGreen());
+                            bright = temp;
                         img[i][x] = bright.getRGB();
                     c++;
                 }
@@ -703,39 +790,36 @@ public class Main extends Application {
                         temp.getGreen() - 5 >= 0 &&
                         temp.getBlue() - 10 >= 0)
                             bright = new Color(
-                                (int) temp.getRed() + 10,
-                                (int) temp.getGreen() - 5,
-                                (int) temp.getBlue() - 10);
+                                (int) temp.getRed() + 5,
+                                (int) temp.getGreen() - 1,
+                                (int) temp.getBlue() - 5);
                     else
-                        bright = new Color(
-                            (int) temp.getRed(),
-                            (int) temp.getGreen(),
-                            (int) temp.getBlue());
-                    if (
-                        temp.getRed() >= 255 / 2 &&
-                        temp.getGreen() >= 255 / 2 &&
-                        temp.getBlue() >= 255 / 2)
-                            bright = new Color(
-                                (int) temp.getRed() - contrastTolerance,
-                                (int) temp.getGreen() - contrastTolerance,
-                                (int) temp.getBlue() - contrastTolerance);
-                    else if (
-                        temp.getRed() >= 0 + contrastTolerance &&
-                        temp.getGreen() >= 0 + contrastTolerance &&
-                        temp.getBlue() >= 0 + contrastTolerance &&
-                        temp.getRed() <= 255 / 2 &&
-                        temp.getGreen() <= 255 / 2 &&
-                        temp.getBlue() <= 255 / 2)
-                            bright = new Color(
-                                (int) temp.getRed() + contrastTolerance,
-                                (int) temp.getGreen() + contrastTolerance,
-                                (int) temp.getBlue() + contrastTolerance);
-                    else {
-                        bright = new Color(
-                            (int) temp.getRed(),
-                            (int) temp.getGreen(),
-                            (int) temp.getBlue());
-                    }
+                        bright = temp;
+                    // if (
+                    //     temp.getRed() >= 255 / 2 &&
+                    //     temp.getGreen() >= 255 / 2 &&
+                    //     temp.getBlue() >= 255 / 2)
+                    //         bright = new Color(
+                    //             (int) temp.getRed() - contrastTolerance,
+                    //             (int) temp.getGreen() - contrastTolerance,
+                    //             (int) temp.getBlue() - contrastTolerance);
+                    // else if (
+                    //     temp.getRed() >= 0 + contrastTolerance &&
+                    //     temp.getGreen() >= 0 + contrastTolerance &&
+                    //     temp.getBlue() >= 0 + contrastTolerance &&
+                    //     temp.getRed() <= 255 / 2 &&
+                    //     temp.getGreen() <= 255 / 2 &&
+                    //     temp.getBlue() <= 255 / 2)
+                    //         bright = new Color(
+                    //             (int) temp.getRed() + contrastTolerance,
+                    //             (int) temp.getGreen() + contrastTolerance,
+                    //             (int) temp.getBlue() + contrastTolerance);
+                    // else {
+                    //     bright = new Color(
+                    //         (int) temp.getRed(),
+                    //         (int) temp.getGreen(),
+                    //         (int) temp.getBlue());
+                    //}
                     img[i][x] = bright.getRGB();
                     c++;
                 }
