@@ -286,6 +286,17 @@ public class Main extends Application {
         y1 = Integer.parseInt(selection1.getText().substring(selection1.getText().indexOf(" ") + 2));
         x2 = Integer.parseInt(selection2.getText().substring(0, selection2.getText().indexOf(" ")));
         y2 = Integer.parseInt(selection2.getText().substring(selection2.getText().indexOf(" ") + 2));
+        int temp;
+        System.out.println(x1 + ", " + y1 + "  " + x2 + ", " + y2);
+        if(x1 > x2 && y1 > y2){
+            temp = x1;
+            x1 = x2;
+            x2 = temp;
+            temp = y1;
+            y1 = y2;
+            y2 = temp;
+        }
+        System.out.println(x1 + ", " + y1 + "  " + x2 + ", " + y2);
         selectedW = x2 - x1;
         selectedH = y2 - y1;
         selected = true;
@@ -329,16 +340,19 @@ public class Main extends Application {
                     Color temp = new Color(RGBarray[c]);
                     if (
                         selected && 
-                        i >= x1 && i <= x2 && 
-                        x >= y1 && x <= y2 && 
+                        x >= x1 && x <= x2 && 
+                        i >= y1 && i <= y2 && 
                         (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance && 
+                        (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance){
+                            marked.add(new int[] {i,x});
+                            // temp = new Color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
+                            System.out.println(i + " " + x);
+                        }
+                    else if (
+                        !selected &&
+                        (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance &&
                         (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance)
                             marked.add(new int[] {i,x});
-                    else if (
-                            !selected &&
-                            (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance &&
-                            (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance)
-                                marked.add(new int[] {i,x});
                     img[i][x] = temp.getRGB();
                     c++;
                 }
@@ -469,8 +483,8 @@ public class Main extends Application {
                     Color temp = new Color(RGBarray[c]);
                     Color bright;
                     if(selected && 
-                        i >= x1 && i <= x2 && 
-                        x >= y1 && x <= y2)
+                        x >= x1 && x <= x2 && 
+                        i >= y1 && i <= y2)
                         bright = new Color(
                             (int) temp.getRed() + 10 <= 255 ? (int) temp.getRed() + 10 : (int) temp.getRed(),
                             (int) temp.getGreen() + 10 <= 255 ? (int) temp.getGreen() + 10 : (int) temp.getGreen(),
