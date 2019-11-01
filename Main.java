@@ -16,36 +16,56 @@ import javafx.scene.control.*;
 
 public class Main extends Application {
 
-    static int w;
-    static int h;
-    static String name;
-    static String extension;
+    static int w, h, selectedW, selectedH;
+    static String name, extension;
     static boolean scaleWithColor = false;
     static int amountOfPixelsMoved = 10;
-    static int tolerance = 30;
-    static int minTolerance = 0;
-    static int lightTolerance = 200;
-    static int darkTolerance = 30;
+    static int minTolerance = 0, tolerance = 30;
+    static int lightTolerance = 200, darkTolerance = 30;
     static int contrastTolerance = 2;
     static boolean first = true;
-
+    static boolean selecting = false, selected = false;
+    static int selectingCount = 0;
+    static TextField selection1, selection2;
+    static int x1, x2, y1, y2;
+    static double aspectRatio;
+    static double realWidth;
+    static double realHeight;
     public void start(Stage stage) throws Exception { // jpg/jpeg files are not recommended due to compression!
-    	try {
+        try {
             Scanner scan = new Scanner(System.in);
             System.out.println("What is the file name?(with extension)");
             String tempstr = scan.nextLine();
             name = tempstr.substring(0, tempstr.indexOf("."));
             extension = tempstr.substring(tempstr.indexOf("."));
-            try{
-                BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + name + extension));
+            // RandomAccessFile RAF1 = new RandomAccessFile(new File(System.getProperty("user.dir") + "\\Photos\\" + name + extension), "rw");
+            // RandomAccessFile RAF2 = new RandomAccessFile(new File(System.getProperty("user.dir") + "\\Photos\\" + "maleBW.jpg"), "rw");
+            // RandomAccessFile RAF = new RandomAccessFile(new File(System.getProperty("user.dir") + "\\Photos\\" + "new test" + extension), "rw");
+            // for(int i = 0; i < 200; i++){
+            //     RAF1.readLine().getBytes();
+            //     RAF2.readLine().getBytes();
+            // }
+            // RAF.write(RAF1.readLine().getBytes());
+            // RAF.write(RAF2.readLine().getBytes());
+
+            try {
+                BufferedImage imgBuf;
+                if (System.getProperty("os.name").indexOf("Mac") != -1)
+                    imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Photos/" + name + extension));
+                else
+                    imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + name + extension));
                 w = imgBuf.getWidth();
                 h = imgBuf.getHeight();
-            }catch(Exception e){
+            } catch (Exception e) {
                 System.out.println("Invalid file");
                 System.exit(1);
             }
             copyImage(name);
-            Image image = new Image("\\Photos\\"  + name + extension);
+            Image image;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                image = new Image("/Photos/" + name + extension);
+            else
+                image = new Image("\\Photos\\" + name + extension);
             ImageView iv1 = new ImageView();
             iv1.setImage(image);
             iv1.setFitWidth(1000);
@@ -54,17 +74,12 @@ public class Main extends Application {
             iv1.setSmooth(true);
             iv1.setCache(true);
 
-            iv1.setOnMouseClicked(new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent mouseEvent) {
-                    if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
-                        System.out.println(mouseEvent.getSceneX() + "  " + mouseEvent.getY());
-                    }
-                }
-            });
+            aspectRatio = image.getWidth() / image.getHeight();
+            realWidth = Math.min(iv1.getFitWidth(), iv1.getFitHeight() * aspectRatio);
+            realHeight = Math.min(iv1.getFitHeight(), iv1.getFitWidth() / aspectRatio);
 
-            Label label1 = new Label("Scale with color(y/n)"); 
-            final ToggleGroup group = new ToggleGroup();
+            Label label1 = new Label("Scale with color(y/n)");
+            ToggleGroup group = new ToggleGroup();
             RadioButton rb1 = new RadioButton("Use Smart Scaling");
             rb1.setUserData("true");
             rb1.setToggleGroup(group);
@@ -72,12 +87,32 @@ public class Main extends Application {
             RadioButton rb2 = new RadioButton("Disable smart scaling");
             rb2.setUserData("");
             rb2.setToggleGroup(group);
-            Label label2 = new Label("# of pixels moved"); 
+            Label label2 = new Label("# of pixels moved");
             TextField pixels = new TextField();
             Label label3 = new Label("Min Tolerance");
-            TextField minTol = new TextField(); 
+            TextField minTol = new TextField();
             Label label4 = new Label("Tolerance");
             TextField tol = new TextField();
+
+            selection1 = new TextField();
+            selection2 = new TextField();
+
+            iv1.setOnMouseClicked(new EventHandler < MouseEvent > () {
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                        if (selecting == true && selectingCount == 0) {
+                            selection1.setText((int) mouseEvent.getSceneX() + "  " + (int) mouseEvent.getY());
+                            selectingCount++;
+                        } else if (selecting == true && selectingCount == 1) {
+                            selection2.setText((int) mouseEvent.getSceneX() + "  " + (int) mouseEvent.getY());
+                            selecting = false;
+                            selectingCount = 0;
+                            setSelectionHelper();
+                        }
+                    }
+                }
+            });
 
             Button brighten = new Button("Bright");
             brighten.setOnAction((event) -> {
@@ -109,6 +144,11 @@ public class Main extends Application {
                 iv1.setImage(increaseContrast("new-" + name));
             });
 
+            Button decContrast = new Button("Decrease Contrast");
+            decContrast.setOnAction((event) -> {
+                iv1.setImage(decreaseContrast("new-" + name));
+            });
+
             Button mystifyButton = new Button("Blue/Green");
             mystifyButton.setOnAction((event) -> {
                 iv1.setImage(mystify("new-" + name));
@@ -121,35 +161,38 @@ public class Main extends Application {
 
             Button set = new Button("Enter");
             set.setOnAction((event) -> {
-                if(group.getSelectedToggle().getUserData().toString().equals("true"))
+                if (group.getSelectedToggle().getUserData().toString().equals("true"))
                     scaleWithColor = true;
-                else{
-                    scaleWithColor = false;   
+                else {
+                    scaleWithColor = false;
                 }
-                try{ 
+                try {
                     amountOfPixelsMoved = Integer.parseInt(pixels.getText());
-                }catch(Exception e){
+                } catch (Exception e) {
                     amountOfPixelsMoved = 0;
                     pixels.setText("Invalid value");
                 }
-                try{ 
-                    minTolerance = Integer.parseInt(minTol.getText());               
-                }catch(Exception e){
+                try {
+                    minTolerance = Integer.parseInt(minTol.getText());
+                } catch (Exception e) {
                     minTolerance = 0;
                     minTol.setText("Invalid value");
                 }
-                try{ 
-                    tolerance = Integer.parseInt(tol.getText());               
-                }catch(Exception e){
+                try {
+                    tolerance = Integer.parseInt(tol.getText());
+                } catch (Exception e) {
                     tolerance = 0;
                     tol.setText("Invalid value");
                 }
-                
+
             });
 
             Button resetImage = new Button("Reset Image");
             resetImage.setOnAction((event) -> {
-                iv1.setImage(new Image("\\Photos\\" + name + extension));
+                if (System.getProperty("os.name").indexOf("Mac") != -1)
+                    iv1.setImage(new Image("/Photos/" + name + extension));
+                else
+                    iv1.setImage(new Image("\\Photos\\" + name + extension));
                 first = true;
                 copyImage(name);
             });
@@ -159,31 +202,47 @@ public class Main extends Application {
                 saveCurrentImage();
 
             });
-            
-            
+
+            Button setSelection = new Button("Set Selection");
+            setSelection.setOnAction((event) -> {
+                setSelection();
+            });
+
+            Button resetSelection = new Button("Reset Selection");
+            resetSelection.setOnAction((event) -> {
+                resetSelection();
+            });
+
+            Button randomColors = new Button("Random Colors");
+            randomColors.setOnAction((event) -> {
+                iv1.setImage(randomColors("new-" + name));
+            });
+
 
             VBox options = new VBox(5);
-            
+
             options.getChildren().add(rb1);
-            options.getChildren().add(rb2);            
+            options.getChildren().add(rb2);
             options.getChildren().add(label1);
             options.getChildren().add(label2);
             options.getChildren().add(pixels);
 
-            VBox tolBox = new VBox(15);
             HBox minTolBox = new HBox(10);
             minTolBox.getChildren().add(label3);
             minTolBox.getChildren().add(minTol);
 
-            HBox tolBoxGroup = new HBox(10);
-            tolBoxGroup.getChildren().add(label4);
-            tolBoxGroup.getChildren().add(tol);
+            HBox tolBox = new HBox(10);
+            tolBox.getChildren().add(label4);
+            tolBox.getChildren().add(tol);
 
-            tolBox.getChildren().add(minTolBox);
-            tolBox.getChildren().add(tolBoxGroup);
-
+            options.getChildren().add(minTolBox);
             options.getChildren().add(tolBox);
+
             options.getChildren().add(set);
+            options.getChildren().add(selection1);
+            options.getChildren().add(selection2);
+            options.getChildren().add(setSelection);
+            options.getChildren().add(resetSelection);
             options.getChildren().add(resetImage);
             options.getChildren().add(saveImage);
 
@@ -194,15 +253,17 @@ public class Main extends Application {
             buttons.getChildren().add(richDark);
             buttons.getChildren().add(richWhite);
             buttons.getChildren().add(contrast);
+            buttons.getChildren().add(decContrast);
             buttons.getChildren().add(mystifyButton);
             buttons.getChildren().add(pastelButton);
+            buttons.getChildren().add(randomColors);
 
             VBox vbox = new VBox(10);
             vbox.getChildren().add(buttons);
             vbox.getChildren().add(iv1);
 
             HBox full = new HBox(20);
-            full.setPadding(new Insets(10, 50, 50, 50));
+            full.setPadding(new Insets(10, 10, 10, 10));
             full.getChildren().add(vbox);
             full.getChildren().add(options);
 
@@ -228,6 +289,37 @@ public class Main extends Application {
 
     }
 
+   
+
+    private static void setSelectionHelper() {
+        x1 = Integer.parseInt(selection1.getText().substring(0, selection1.getText().indexOf(" ")));
+        y1 = Integer.parseInt(selection1.getText().substring(selection1.getText().indexOf(" ") + 2));
+        x2 = Integer.parseInt(selection2.getText().substring(0, selection2.getText().indexOf(" ")));
+        y2 = Integer.parseInt(selection2.getText().substring(selection2.getText().indexOf(" ") + 2));
+
+        System.out.println(w + " " + h);
+        System.out.println(realWidth + " " + realHeight);
+        
+        int temp;
+        if(x1 > x2 && y1 > y2){
+            temp = x1;
+            x1 = x2;
+            x2 = temp;
+            temp = y1;
+            y1 = y2;
+            y2 = temp;
+        }
+        selectedW = x2 - x1;
+        selectedH = y2 - y1;
+        selected = true;
+    }
+
+    public static void resetSelection() {
+        selection1.setText("No Selection");
+        selection2.setText("No Selection");
+        selected = false;
+    }
+
     private static Image convertToFxImage(BufferedImage image) {
         WritableImage wr = null;
         if (image != null) {
@@ -245,24 +337,39 @@ public class Main extends Application {
 
     public static Image pixelSort(String imgName) {
         try {
-            ArrayList<int[]> marked = new ArrayList<int[]>();
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            ArrayList < int[] > marked = new ArrayList < int[] > ();
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
-            int c = 0;
 
+            int c = 0;
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if ((int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance && (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance)
-                        marked.add(new int[] { i, x });
-                    Color bright = new Color((int) temp.getRed(), (int) temp.getGreen(), (int) temp.getBlue());
-                    img[i][x] = bright.getRGB();
+                    if (
+                        selected && 
+                        x >= x1 && x <= x2 && 
+                        i >= y1 && i <= y2 && 
+                        (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance && 
+                        (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance){
+                            marked.add(new int[] {i,x});
+                            System.out.println(i + " " + x);
+                        }
+                    else if (
+                        !selected &&
+                        (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() < tolerance &&
+                        (int) temp.getRed() + (int) temp.getGreen() + (int) temp.getBlue() > minTolerance)
+                            marked.add(new int[] {i,x});
+                    img[i][x] = temp.getRGB();
                     c++;
                 }
             }
             int amount = 0;
-            for (int[] arr : marked) {
+            for (int[] arr: marked) {
                 Color temp;
                 if (arr[0] != 0 && arr[1] != 0)
                     temp = new Color(img[arr[0] - 1][arr[1] - 1]);
@@ -286,9 +393,13 @@ public class Main extends Application {
         return null;
     }
 
-    public static Image enhanceWhites(String imgName) {
+    public static Image randomColors(String imgName){
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -296,17 +407,116 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    if (temp.getRed() > lightTolerance && temp.getGreen() > lightTolerance && temp.getRed() > lightTolerance) {
-                        Color bright;
-                        if (temp.getRed() > 245 && temp.getGreen() < 245 && temp.getBlue() < 245)
-                            bright = new Color(255, 255, 255);
-                        else
+                    Color bright;
+                    if(selected && 
+                        x >= x1 && x <= x2 && 
+                        i >= y1 && i <= y2){
+                        int temp1 = (int)(Math.random()*temp.getRed());
+                        int temp2 = (int)(Math.random()*temp.getGreen());
+                        int temp3 = (int)(Math.random()*temp.getBlue());
+                        int desc = (int)Math.round(Math.random());
+                        int brightness = temp.getRed() + temp.getGreen() + temp.getBlue();
+                            int newRed = (int)(Math.random() * 255);
+                            int newGreen = (int)(Math.random() * 255);
+                            int newBlue = (int)(Math.random() * 255);
+                            for(int t = 0; newRed + newGreen + newBlue > brightness && newRed < 255 && newGreen < 255 && newBlue < 255;t++){
+                                if(newGreen > 255 || newBlue > 255 || newRed > 255){
+                                    newGreen--;
+                                    newBlue--;
+                                    newRed--;
+                                }
+
+                                if(t % 3 == 0 && newRed > 0)
+                                    newRed--;
+                                else if(t % 2 == 0 && newGreen > 0)
+                                    newGreen--;
+                                else if(newBlue > 0)
+                                    newBlue--;
+                            }
                             bright = new Color(
+                                newRed,
+                                newGreen,
+                                newBlue);
+                        }
+                        else if(!selected){
+                            int brightness = temp.getRed() + temp.getGreen() + temp.getBlue();
+                            int newRed = (int)(Math.random() * 255);
+                            int newGreen = (int)(Math.random() * 255);
+                            int newBlue = (int)(Math.random() * 255);
+                            for(int t = 0; newRed + newGreen + newBlue > brightness && newRed < 255 && newGreen < 255 && newBlue < 255;t++){
+                                if(newGreen > 255 || newBlue > 255 || newRed > 255){
+                                    newGreen--;
+                                    newBlue--;
+                                    newRed--;
+                                }
+
+                                if(t % 3 == 0 && newRed > 0)
+                                    newRed--;
+                                else if(t % 2 == 0 && newGreen > 0)
+                                    newGreen--;
+                                else if(newBlue > 0)
+                                    newBlue--;
+                            }
+                            bright = new Color(
+                                newRed,
+                                newGreen,
+                                newBlue);
+                        }
+                       
+                        else{
+                            bright = temp;
+                        }
+                        img[i][x] = bright.getRGB();
+                    c++;
+                }
+            }
+            System.out.println("done");
+            return convertToFxImage(convertAndSaveImage(img));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void setSelection() {
+        selecting = true;
+        selectingCount = 0;
+    }
+
+    public static Image enhanceWhites(String imgName) {
+        try {
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
+            int[][] img = new int[h][w];
+            int c = 0;
+
+            for (int i = 0; i < h; i++) {
+                for (int x = 0; x < w; x++) {
+                    Color temp = new Color(RGBarray[c]);
+                    if (
+                        (selected && 
+                        i >= x1 && i <= x2 && 
+                        x >= y1 && x <= y2 && 
+                        temp.getRed() > lightTolerance && 
+                        temp.getGreen() > lightTolerance && 
+                        temp.getRed() > lightTolerance) || 
+                        (!selected &&
+                        temp.getRed() > lightTolerance && 
+                        temp.getGreen() > lightTolerance && temp.getRed() > lightTolerance)){
+                            Color bright;
+                            if (temp.getRed() > 245 && temp.getGreen() < 245 && temp.getBlue() < 245)
+                                bright = new Color(255, 255, 255);
+                            else
+                                bright = new Color(
                                     (int) temp.getRed() + 10 <= 255 ? (int) temp.getRed() + 10 : (int) temp.getRed(),
-                                    (int) temp.getGreen() + 10 <= 255 ? (int) temp.getGreen() + 10: (int) temp.getGreen(),
+                                    (int) temp.getGreen() + 10 <= 255 ? (int) temp.getGreen() + 10 : (int) temp.getGreen(),
                                     (int) temp.getBlue() + 10 <= 255 ? (int) temp.getBlue() + 10 : (int) temp.getBlue());
 
-                        img[i][x] = bright.getRGB();
+                            img[i][x] = bright.getRGB();
                     } else {
                         img[i][x] = RGBarray[c];
                     }
@@ -322,7 +532,11 @@ public class Main extends Application {
 
     public static Image RicherDarkColors(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -336,9 +550,9 @@ public class Main extends Application {
                             bright = new Color(0, 0, 0);
                         else
                             bright = new Color(
-                                    (int) temp.getRed() - 10 >= 0 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
-                                    (int) temp.getGreen() - 10 >= 0 ? (int) temp.getGreen() - 10: (int) temp.getGreen(),
-                                    (int) temp.getBlue() - 10 >= 0 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
+                                (int) temp.getRed() - 10 >= 0 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
+                                (int) temp.getGreen() - 10 >= 0 ? (int) temp.getGreen() - 10 : (int) temp.getGreen(),
+                                (int) temp.getBlue() - 10 >= 0 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
 
                         img[i][x] = bright.getRGB();
                     } else {
@@ -356,7 +570,11 @@ public class Main extends Application {
 
     public static Image brightenImage(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -364,11 +582,22 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    Color bright = new Color(
+                    Color bright;
+                    if(selected && 
+                        x >= x1 && x <= x2 && 
+                        i >= y1 && i <= y2)
+                        bright = new Color(
                             (int) temp.getRed() + 10 <= 255 ? (int) temp.getRed() + 10 : (int) temp.getRed(),
                             (int) temp.getGreen() + 10 <= 255 ? (int) temp.getGreen() + 10 : (int) temp.getGreen(),
                             (int) temp.getBlue() + 10 <= 255 ? (int) temp.getBlue() + 10 : (int) temp.getBlue());
-                    img[i][x] = bright.getRGB();
+                        else if(!selected)
+                            bright = new Color(
+                                (int) temp.getRed() + 10 <= 255 ? (int) temp.getRed() + 10 : (int) temp.getRed(),
+                                (int) temp.getGreen() + 10 <= 255 ? (int) temp.getGreen() + 10 : (int) temp.getGreen(),
+                                (int) temp.getBlue() + 10 <= 255 ? (int) temp.getBlue() + 10 : (int) temp.getBlue());
+                        else
+                            bright = temp;
+                        img[i][x] = bright.getRGB();
                     c++;
                 }
             }
@@ -381,7 +610,11 @@ public class Main extends Application {
 
     public static Image increaseContrast(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -390,29 +623,83 @@ public class Main extends Application {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
                     Color newColor;
-                    if(
-                        temp.getRed() <= 255 - contrastTolerance && 
-                        temp.getGreen() <= 255 - contrastTolerance && 
+                    if (
+                        temp.getRed() <= 255 - contrastTolerance &&
+                        temp.getGreen() <= 255 - contrastTolerance &&
                         temp.getBlue() <= 255 - contrastTolerance &&
-                        temp.getRed() >= 255/2 - contrastTolerance && 
-                        temp.getGreen() >= 255/2 - contrastTolerance && 
-                        temp.getBlue() >= 255/2 - contrastTolerance)
+                        temp.getRed() >= 255 / 2 - contrastTolerance &&
+                        temp.getGreen() >= 255 / 2 - contrastTolerance &&
+                        temp.getBlue() >= 255 / 2 - contrastTolerance)
                             newColor = new Color(
-                                (int) temp.getRed() + contrastTolerance, 
-                                (int) temp.getGreen() + contrastTolerance, 
+                                (int) temp.getRed() + contrastTolerance,
+                                (int) temp.getGreen() + contrastTolerance,
                                 (int) temp.getBlue() + contrastTolerance);
                     else if (
-                        temp.getRed() >= 0 + contrastTolerance && 
-                        temp.getGreen() >= 0 + contrastTolerance && 
+                        temp.getRed() >= 0 + contrastTolerance &&
+                        temp.getGreen() >= 0 + contrastTolerance &&
                         temp.getBlue() >= 0 + contrastTolerance)
                             newColor = new Color(
-                                (int) temp.getRed() - contrastTolerance, 
-                                (int) temp.getGreen() - contrastTolerance, 
+                                (int) temp.getRed() - contrastTolerance,
+                                (int) temp.getGreen() - contrastTolerance,
                                 (int) temp.getBlue() - contrastTolerance);
-                    else{
+                    else {
                         newColor = new Color(
-                            (int) temp.getRed(), 
-                            (int) temp.getGreen(), 
+                            (int) temp.getRed(),
+                            (int) temp.getGreen(),
+                            (int) temp.getBlue());
+                    }
+                    img[i][x] = newColor.getRGB();
+                    c++;
+                }
+            }
+            return convertToFxImage(convertAndSaveImage(img));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Image decreaseContrast(String imgName) {
+        try {
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
+            int[][] img = new int[h][w];
+            int c = 0;
+
+            for (int i = 0; i < h; i++) {
+                for (int x = 0; x < w; x++) {
+                    Color temp = new Color(RGBarray[c]);
+                    Color newColor;
+                    if (
+                        temp.getRed() <= 255 &&
+                        temp.getGreen() <= 255 &&
+                        temp.getBlue() <= 255 &&
+                        temp.getRed() >= 255 / 2 &&
+                        temp.getGreen() >= 255 / 2 &&
+                        temp.getBlue() >= 255 / 2)
+                            newColor = new Color(
+                                (int) temp.getRed() - contrastTolerance,
+                                (int) temp.getGreen() - contrastTolerance,
+                                (int) temp.getBlue() - contrastTolerance);
+                    else if (
+                        temp.getRed() >= 0 &&
+                        temp.getGreen() >= 0 &&
+                        temp.getBlue() >= 0 &&
+                        temp.getRed() <= 255 - contrastTolerance &&
+                        temp.getGreen() <= 255 - contrastTolerance &&
+                        temp.getBlue() <= 255 - contrastTolerance)
+                            newColor = new Color(
+                                (int) temp.getRed() + contrastTolerance,
+                                (int) temp.getGreen() + contrastTolerance,
+                                (int) temp.getBlue() + contrastTolerance);
+                    else {
+                        newColor = new Color(
+                            (int) temp.getRed(),
+                            (int) temp.getGreen(),
                             (int) temp.getBlue());
                     }
                     img[i][x] = newColor.getRGB();
@@ -428,7 +715,11 @@ public class Main extends Application {
 
     public static Image darkenImage(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -437,9 +728,9 @@ public class Main extends Application {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
                     Color bright = new Color(
-                            (int) temp.getRed() - 10 >= 1 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
-                            (int) temp.getGreen() - 10 >= 1 ? (int) temp.getGreen() - 10 : (int) temp.getGreen(),
-                            (int) temp.getBlue() - 10 >= 1 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
+                        (int) temp.getRed() - 10 >= 1 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
+                        (int) temp.getGreen() - 10 >= 1 ? (int) temp.getGreen() - 10 : (int) temp.getGreen(),
+                        (int) temp.getBlue() - 10 >= 1 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
                     img[i][x] = bright.getRGB();
                     c++;
                 }
@@ -453,7 +744,11 @@ public class Main extends Application {
 
     public static Image mystify(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -461,10 +756,20 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    Color bright = new Color(
-                            (int) temp.getRed() - 10 >= 1 ? (int) temp.getRed() - 10 : (int) temp.getRed(),
-                            (int) temp.getGreen() + 5 <= 255 ? (int) temp.getGreen() + 5 : (int) temp.getGreen(),
-                            (int) temp.getBlue() + 5 <= 255 ? (int) temp.getBlue() + 5 : (int) temp.getBlue());
+                    Color bright;
+                    if (
+                        temp.getRed() - 5 >= 0 &&
+                        temp.getGreen() + 5 <= 255 &&
+                        temp.getBlue() + 5 <= 255)
+                        bright = new Color(
+                            (int) temp.getRed() - 5,
+                            (int) temp.getGreen() + 5,
+                            (int) temp.getBlue() + 5);
+                    else
+                        bright = new Color(
+                            (int) temp.getRed(),
+                            (int) temp.getGreen(),
+                            (int) temp.getBlue());
                     img[i][x] = bright.getRGB();
                     c++;
                 }
@@ -478,7 +783,11 @@ public class Main extends Application {
 
     public static Image pastel(String imgName) {
         try {
-            BufferedImage imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
+            BufferedImage imgBuf;
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/" + imgName + extension));
+            else
+                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\" + imgName + extension));
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
             int c = 0;
@@ -486,10 +795,42 @@ public class Main extends Application {
             for (int i = 0; i < h; i++) {
                 for (int x = 0; x < w; x++) {
                     Color temp = new Color(RGBarray[c]);
-                    Color bright = new Color(
-                            (int) temp.getRed() -5 >= 0 ? (int) temp.getRed() -5 : (int) temp.getRed(),
-                            (int) temp.getGreen() - 10 >= 0 ? (int) temp.getGreen() - 10 : (int) temp.getGreen(),
-                            (int) temp.getBlue() - 10 >= 0 ? (int) temp.getBlue() - 10 : (int) temp.getBlue());
+                    Color bright;
+                    if (
+                        temp.getRed() + 10 <= 255 &&
+                        temp.getGreen() - 5 >= 0 &&
+                        temp.getBlue() - 10 >= 0)
+                            bright = new Color(
+                                (int) temp.getRed() + 5,
+                                (int) temp.getGreen() - 1,
+                                (int) temp.getBlue() - 5);
+                    else
+                        bright = temp;
+                    // if (
+                    //     temp.getRed() >= 255 / 2 &&
+                    //     temp.getGreen() >= 255 / 2 &&
+                    //     temp.getBlue() >= 255 / 2)
+                    //         bright = new Color(
+                    //             (int) temp.getRed() - contrastTolerance,
+                    //             (int) temp.getGreen() - contrastTolerance,
+                    //             (int) temp.getBlue() - contrastTolerance);
+                    // else if (
+                    //     temp.getRed() >= 0 + contrastTolerance &&
+                    //     temp.getGreen() >= 0 + contrastTolerance &&
+                    //     temp.getBlue() >= 0 + contrastTolerance &&
+                    //     temp.getRed() <= 255 / 2 &&
+                    //     temp.getGreen() <= 255 / 2 &&
+                    //     temp.getBlue() <= 255 / 2)
+                    //         bright = new Color(
+                    //             (int) temp.getRed() + contrastTolerance,
+                    //             (int) temp.getGreen() + contrastTolerance,
+                    //             (int) temp.getBlue() + contrastTolerance);
+                    // else {
+                    //     bright = new Color(
+                    //         (int) temp.getRed(),
+                    //         (int) temp.getGreen(),
+                    //         (int) temp.getBlue());
+                    //}
                     img[i][x] = bright.getRGB();
                     c++;
                 }
@@ -504,12 +845,18 @@ public class Main extends Application {
     public static BufferedImage copyImage(String oldFile) {
         try {
             BufferedImage imgBuf;
-            if(first){
-                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + oldFile + extension));
+            if (first) {
+                if (System.getProperty("os.name").indexOf("Mac") != -1)
+                    imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Photos/" + oldFile + extension));
+                else
+                    imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Photos\\" + oldFile + extension));
                 first = false;
+            } else {
+                if (System.getProperty("os.name").indexOf("Mac") != -1)
+                    imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "/Edited-Photos/new-" + oldFile + extension));
+                else
+                    imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + oldFile + extension));
             }
-            else
-                imgBuf = ImageIO.read(new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + oldFile + extension));
             BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             int[] RGBarray = imgBuf.getRGB(0, 0, w, h, null, 0, w);
             int[][] img = new int[h][w];
@@ -525,7 +872,10 @@ public class Main extends Application {
                     bufferedImage.setRGB(col, row, img[row][col]);
                 }
             }
-            ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + oldFile + extension));
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "/Edited-Photos/new-" + oldFile + extension));
+            else
+                ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + oldFile + extension));
             return bufferedImage;
         } catch (Exception e) {
             e.printStackTrace();
@@ -542,7 +892,10 @@ public class Main extends Application {
                     bufferedImage.setRGB(col, row, img[row][col]);
                 }
             }
-            ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + name + extension));
+            if (System.getProperty("os.name").indexOf("Mac") != -1)
+                ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "/Edited-Photos/new-" + name + extension));
+            else
+                ImageIO.write(bufferedImage, extension.substring(1), new File(System.getProperty("user.dir") + "\\Edited-Photos\\new-" + name + extension));
             return bufferedImage;
         } catch (Exception e) {
             e.printStackTrace();
@@ -552,8 +905,13 @@ public class Main extends Application {
 
     public static void saveCurrentImage() {
         try {
-            System.out.println("Saved in\n" + new File(System.getProperty("user.dir") + "\\Saved-Photos" + "\nas\n"+ name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
-            ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis()/10000) + ")" + extension));
+            if (System.getProperty("os.name").indexOf("Mac") != -1) {
+                System.out.println("Saved in\n" + new File(System.getProperty("user.dir") + "/Saved-Photos" + "\nas\n" + name + "(" + Long.toString(System.currentTimeMillis() / 10000) + ")" + extension));
+                ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "/Saved-Photos/" + name + "(" + Long.toString(System.currentTimeMillis() / 10000000) + ")" + extension));
+            } else {
+                System.out.println("Saved in\n" + new File(System.getProperty("user.dir") + "\\Saved-Photos" + "\nas\n" + name + "(" + Long.toString(System.currentTimeMillis() / 10000) + ")" + extension));
+                ImageIO.write(copyImage(name), extension.substring(1), new File(System.getProperty("user.dir") + "\\Saved-Photos\\" + name + "(" + Long.toString(System.currentTimeMillis() / 10000000) + ")" + extension));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

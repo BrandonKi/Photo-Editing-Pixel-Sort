@@ -1,5 +1,5 @@
-
+@echo off
 cd %cd%
-javac -cp ".;.jfxrt.jar" Main.java
-java -cp ".;.jfxrt.jar" Main
+javac Main.java
+java Main
 pause

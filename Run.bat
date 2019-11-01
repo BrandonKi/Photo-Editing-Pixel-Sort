@@ -1,4 +1,4 @@
 @echo off
 cd %cd%
-java -jar test.jar
+java -jar Application.jar
 pause
